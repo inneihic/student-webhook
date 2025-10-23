@@ -1,94 +1,118 @@
-const express = require('express');
-const bodyParser = require('body-parser');
+const express = require("express");
+const bodyParser = require("body-parser");
+
 const app = express();
 app.use(bodyParser.json());
 
-// =========================
-// Mock data sinh viên mẫu
-// =========================
-const studentData = {
-  SV001: {
-    ten: "Huỳnh Bảo Minh",
-    khoa: "Kỹ thuật dữ liệu",
-    hocphi: "18.000.000 VNĐ",
-    han_dong: "30/10/2025",
-    lichhoc: [
-      { ngay: "Thứ 2", mon: "Cấu trúc dữ liệu", gio: "7h30", phong: "A101" },
-      { ngay: "Thứ 3", mon: "Mạng máy tính", gio: "9h30", phong: "B202" },
-      { ngay: "Thứ 5", mon: "Cơ sở dữ liệu", gio: "13h00", phong: "C303" },
+// data
+const students = {
+  "20230001": {
+    name: "Huỳnh Bảo Minh",
+    birth: "2005-30-02",
+    faculty: "Kỹ thuật dữ liệu",
+    class: "23133A",
+    schedule: [
+      { day: "Thứ 2", subject: "Cấu trúc dữ liệu", room: "A101", time: "07:30 - 09:30" },
+      { day: "Thứ 3", subject: "Cơ sở dữ liệu", room: "B201", time: "09:40 - 11:40" }
     ],
+    tuition: {
+      total: 8500000,
+      paid: 5000000,
+      deadline: "2025-11-15",
+      payment_methods: [
+        "Chuyển khoản ngân hàng",
+        "Thanh toán qua ví Momo",
+        "Đóng trực tiếp tại phòng tài vụ"
+      ]
+    }
   },
+  "20230002": {
+    name: "Võ Lê Minh Chiến",
+    birth: "2005-31-02",
+    faculty: "Kỹ thuật dữ liệu",
+    class: "23133C",
+    schedule: [
+      { day: "Thứ 4", subject: "Điện toán đám mây", room: "C102", time: "08:00 - 10:00" },
+      { day: "Thứ 5", subject: "BigData", room: "C105", time: "10:15 - 12:15" }
+    ],
+    tuition: {
+      total: 7800000,
+      paid: 7800000,
+      deadline: "2025-11-10",
+      payment_methods: ["Chuyển khoản ngân hàng"]
+    }
+    exams: [
+      { subject: "Cấu trúc dữ liệu", date: "2025-12-10", time: "08:00 - 10:00", room: "P201" },
+      { subject: "Cơ sở dữ liệu", date: "2025-12-15", time: "13:00 - 15:00", room: "P203" }
+    ]
+  }
 };
 
-// Hàm tiện ích: lấy lịch học hôm nay
-function getTodaySchedule(studentId) {
-  const today = "Thứ 2"; 
-  const info = studentData[studentId]?.lichhoc.find(l => l.ngay === today);
-  if (!info) return "Hôm nay bạn không có tiết học nào.";
-  return `Hôm nay bạn học môn ${info.mon} lúc ${info.gio} tại phòng ${info.phong}.`;
-}
-
-// =========================
-// Endpoint 1: /profile
-// =========================
-app.post('/profile', (req, res) => {
+// -------------------------
+// Hàm xử lý intent
+// -------------------------
+app.post("/webhook", (req, res) => {
+  const intent = req.body.queryResult.intent.displayName;
   const studentId = req.body.queryResult.parameters.student_id;
-  const student = studentData[studentId];
 
-  let responseText;
-  if (student) {
-    responseText = `Bạn tên là ${student.ten}, mã sinh viên ${studentId}, thuộc khoa ${student.khoa}.`;
-  } else {
-    responseText = `Không tìm thấy thông tin cho mã sinh viên ${studentId}.`;
+  console.log("Nhận yêu cầu từ intent:", intent, "student_id:", studentId);
+
+  const student = students[studentId];
+  if (!student) {
+    return res.json({
+      fulfillmentText: `Không tìm thấy thông tin cho mã sinh viên ${studentId}. Vui lòng kiểm tra lại.`
+    });
   }
 
-  res.json({
-    fulfillmentMessages: [{ text: { text: [responseText] } }]
+  let responseText = "";
+
+  switch (intent) {
+    case "student_profile":
+      responseText = `Lý lịch sinh viên:
+- Họ tên: ${student.name}
+- Ngày sinh: ${student.birth}
+- Khoa: ${student.faculty}
+- Lớp: ${student.class}`;
+      break;
+
+    case "student_schedule":
+      responseText = ` Lịch học của ${student.name}:\n` +
+        student.schedule.map(
+          (s) => `${s.day}: ${s.subject} (${s.room}, ${s.time})`
+        ).join("\n");
+      break;
+
+    case "student_tuition":
+      const { total, paid, deadline, payment_methods } = student.tuition;
+      const remaining = total - paid;
+      responseText = `Thông tin học phí của ${student.name}:
+- Tổng học phí: ${total.toLocaleString()} VNĐ
+- Đã đóng: ${paid.toLocaleString()} VNĐ
+- Còn nợ: ${remaining.toLocaleString()} VNĐ
+- Hạn đóng: ${deadline}
+- Hình thức thanh toán: ${payment_methods.join(", ")}`;
+      break;
+      
+    case "student_exam_schedule":
+      responseText = `🧾 Lịch thi của ${student.name}:\n` +
+        student.exams.map(
+          (e) => `${e.subject}: ${e.date} (${e.time}) - Phòng ${e.room}`
+        ).join("\n");
+      break;
+      
+    default:
+      responseText = "Xin lỗi, tôi chưa được lập trình cho yêu cầu này.";
+  }
+
+  return res.json({
+    fulfillmentText: responseText
   });
 });
 
-// =========================
-// Endpoint 2: /schedule
-// =========================
-app.post('/schedule', (req, res) => {
-  const studentId = req.body.queryResult.parameters.student_id;
-  const student = studentData[studentId];
-
-  let responseText;
-  if (student) {
-    responseText = getTodaySchedule(studentId);
-  } else {
-    responseText = `Không tìm thấy thời khóa biểu cho mã sinh viên ${studentId}.`;
-  }
-
-  res.json({
-    fulfillmentMessages: [{ text: { text: [responseText] } }]
-  });
+// -------------------------
+//  Khởi động server
+// -------------------------
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(` Webhook đang chạy trên cổng ${PORT}`);
 });
-
-// =========================
-// Endpoint 3: /tuition
-// =========================
-app.post('/tuition', (req, res) => {
-  const studentId = req.body.queryResult.parameters.student_id;
-  const student = studentData[studentId];
-
-  let responseText;
-  if (student) {
-    responseText = `Học phí học kỳ này của bạn là ${student.hocphi}. Hạn nộp: ${student.han_dong}.`;
-  } else {
-    responseText = `Không tìm thấy học phí cho mã sinh viên ${studentId}.`;
-  }
-
-  res.json({
-    fulfillmentMessages: [{ text: { text: [responseText] } }]
-  });
-});
-
-// =========================
-// Test route
-// =========================
-app.get('/', (req, res) => res.send('Webhook sinh viên đang hoạt động'));
-
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Webhook đang chạy trên cổng ${PORT}`));
