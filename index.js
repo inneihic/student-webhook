@@ -40,7 +40,7 @@ const students = {
       paid: 7800000,
       deadline: "2025-11-10",
       payment_methods: ["Chuyển khoản ngân hàng"]
-    }
+    },
     exams: [
       { subject: "Cấu trúc dữ liệu", date: "2025-12-10", time: "08:00 - 10:00", room: "P201" },
       { subject: "Cơ sở dữ liệu", date: "2025-12-15", time: "13:00 - 15:00", room: "P203" }
@@ -116,3 +116,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(` Webhook đang chạy trên cổng ${PORT}`);
 });
+
