@@ -24,7 +24,11 @@ const students = {
         "Thanh toán qua ví Momo",
         "Đóng trực tiếp tại phòng tài vụ"
       ]
-    }
+    },
+    exams: [
+      { subject: "Cấu trúc dữ liệu", date: "2025-12-10", time: "08:00 - 10:00", room: "P201" },
+      { subject: "Cơ sở dữ liệu", date: "2025-12-15", time: "13:00 - 15:00", room: "P203" }
+    ]
   },
   "20230002": {
     name: "Võ Lê Minh Chiến",
@@ -42,11 +46,12 @@ const students = {
       payment_methods: ["Chuyển khoản ngân hàng"]
     },
     exams: [
-      { subject: "Cấu trúc dữ liệu", date: "2025-12-10", time: "08:00 - 10:00", room: "P201" },
-      { subject: "Cơ sở dữ liệu", date: "2025-12-15", time: "13:00 - 15:00", room: "P203" }
+      { subject: "Điện toán đám mây", date: "2025-12-18", time: "08:00 - 10:00", room: "P205" },
+      { subject: "BigData", date: "2025-12-22", time: "13:00 - 15:00", room: "P208" }
     ]
   }
 };
+
 
 // -------------------------
 // Hàm xử lý intent
@@ -116,4 +121,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(` Webhook đang chạy trên cổng ${PORT}`);
 });
+
 
