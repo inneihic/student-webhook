@@ -1,8 +1,8 @@
 {
   "name": "student-webhook",
   "version": "1.0.0",
+  "description": "Dialogflow webhook for student management bot",
   "main": "index.js",
-  "type": "commonjs",
   "scripts": {
     "start": "node index.js"
   },
