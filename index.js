@@ -58,10 +58,23 @@ const students = {
 // -------------------------
 app.post("/webhook", (req, res) => {
   const intent = req.body.queryResult.intent.displayName;
-  const studentId = req.body.queryResult.parameters.student_id;
+  const params = req.body.queryResult.parameters || {};
+  const studentId = params.student_id;
 
-  console.log("Nhận yêu cầu từ intent:", intent, "student_id:", studentId);
+  console.log("📩 Nhận yêu cầu:", intent, "student_id:", studentId);
 
+  // Nếu intent cần student_id mà chưa có, không xử lý
+  const needIdIntents = [
+    "student_profile",
+    "student_schedule",
+    "student_tuition",
+    "student_exam_schedule"
+  ];
+
+  if (needIdIntents.includes(intent) && !studentId) {
+    console.log("Webhook được gọi sớm, chưa có student_id → bỏ qua.");
+    return res.json({ fulfillmentText: "" }); // để slot filling tiếp tục hỏi
+  }
   const student = students[studentId];
   if (!student) {
     return res.json({
@@ -121,5 +134,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(` Webhook đang chạy trên cổng ${PORT}`);
 });
+
 
 
